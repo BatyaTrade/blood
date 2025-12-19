@@ -21,9 +21,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     first_name = update.effective_user.first_name or "Player"
     
+    # Используем обычную URL кнопку вместо web_app
     keyboard = [[InlineKeyboardButton(
         "🎮 Играть в Blood Mushroom", 
-        web_app={"url": f"https://t.me/{BOT_USERNAME}/app"}
+        url=f"https://t.me/{BOT_USERNAME}/app"
     )]]
     
     await update.message.reply_text(
