@@ -1,6 +1,6 @@
 import os
 import logging
-from telegram import Update
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ContextTypes
 
 # Настройка логирования
@@ -12,52 +12,32 @@ logger = logging.getLogger(__name__)
 
 # Конфигурация
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
-DATABASE_URL = os.environ.get('DATABASE_URL')
-ADMIN_ID = int(os.environ.get('ADMIN_TELEGRAM_ID', '0'))
+BOT_USERNAME = os.environ.get('BOT_USERNAME', 'BloodMushroomBot')  # Имя бота без @
 
-# Команда /start
+# Команда /start (только приветствие + кнопка WebApp)
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    username = update.effective_user.first_name or "Player"
+    first_name = update.effective_user.first_name or "Player"
     
-    logger.info(f"User {user_id} ({username}) started bot")
-    
-    await update.message.reply_text(
-        f"🍄 *Добро пожаловать в Blood Mushroom, {username}!*\n\n"
-        f"🎮 Запустите игру через кнопку меню внизу\n"
-        f"💰 Фармите эссенцию и зарабатывайте TON!\n\n"
-        f"Команды:\n"
-        f"/stats - Ваша статистика\n"
-        f"/help - Помощь",
-        parse_mode='Markdown'
-    )
-
-# Команда /stats
-async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    username = update.effective_user.first_name or "Player"
+    # Создаём кнопку для запуска WebApp
+    keyboard = [
+        [InlineKeyboardButton(
+            "🎮 Играть в Blood Mushroom", 
+            web_app={"url": f"https://t.me/{BOT_USERNAME}/app"}
+        )]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
     
     await update.message.reply_text(
-        f"📊 *Статистика {username}*\n\n"
-        f"🆔 ID: `{user_id}`\n"
-        f"🩸 Кровь: 0\n"
-        f"💧 Эссенция: 0\n"
-        f"🎟️ Токены: 0\n\n"
-        f"_Подключение к БД будет добавлено позже_",
-        parse_mode='Markdown'
+        f"🍄 *Добро пожаловать в Blood Mushroom, {first_name}!*\n\n"
+        f"🎮 Нажмите кнопку ниже, чтобы начать играть\n"
+        f"💰 Фармите грибы, собирайте эссенцию и зарабатывайте TON!\n\n"
+        f"Удачи! 🚀",
+        parse_mode='Markdown',
+        reply_markup=reply_markup
     )
-
-# Команда /help
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "📖 *Справка Blood Mushroom Bot*\n\n"
-        "🍄 *Доступные команды:*\n"
-        "/start - Запустить бота\n"
-        "/stats - Показать статистику\n"
-        "/help - Эта справка\n\n"
-        "🎮 Играйте через меню бота!",
-        parse_mode='Markdown'
-    )
+    
+    logger.info(f"User {user_id} started bot")
 
 # Главная функция
 def main():
@@ -70,10 +50,8 @@ def main():
     # Создаём приложение
     app = Application.builder().token(TELEGRAM_TOKEN).build()
     
-    # Регистрируем команды
+    # Только команда /start
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("stats", stats))
-    app.add_handler(CommandHandler("help", help_command))
     
     logger.info("✅ Bot is running (polling mode)")
     
